@@ -2,29 +2,29 @@
 # toolchain config for ARMv7 (Clang)
 ######################################################################################
 
-#API = 16
-#TARGET_HOST = arm-linux
-#TARGET_ABI = armeabi-v7a
-#TARGET_ARCH = arm
-#TARGET_TOOLCHAIN = arm-linux-androideabi
-#TARGET_CFLAGS_ADDON = -mthumb -Ofast -fdata-sections -ffunction-sections -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
-#TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
-#CROSS_PREFIX = arm-linux-androideabi
-#HOST_CC = "gcc -m32" # required for LuaJIT
+API = 16
+TARGET_HOST = arm-linux
+TARGET_ABI = armeabi-v7a
+TARGET_ARCH = arm
+TARGET_TOOLCHAIN = arm-linux-androideabi
+TARGET_CFLAGS_ADDON = -mthumb -Ofast -fdata-sections -ffunction-sections -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
+TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
+CROSS_PREFIX = arm-linux-androideabi
+HOST_CC = "gcc -m32" # required for LuaJIT
 
 ######################################################################################
 # toolchain config for ARM64 (Clang)
 ######################################################################################
 
-API = 21
-TARGET_HOST = arm-linux
-TARGET_ABI = arm64-v8a
-TARGET_ARCH = arm64
-TARGET_TOOLCHAIN = aarch64-linux-android
-TARGET_CFLAGS_ADDON = -Ofast -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
-TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
-CROSS_PREFIX = aarch64-linux-android
-HOST_CC = "gcc -m64" # required for LuaJIT
+# API = 21
+# TARGET_HOST = arm-linux
+# TARGET_ABI = arm64-v8a
+# TARGET_ARCH = arm64
+# TARGET_TOOLCHAIN = aarch64-linux-android
+# TARGET_CFLAGS_ADDON = -Ofast -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
+# TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
+# CROSS_PREFIX = aarch64-linux-android
+# HOST_CC = "gcc -m64" # required for LuaJIT
 
 ######################################################################################
 # toolchain config for x86 (clang)
@@ -108,6 +108,12 @@ LUAJIT_TIMESTAMP = $(LUAJIT_DIR)/timestamp
 LUAJIT_TIMESTAMP_INT = $(ANDR_ROOT)/deps/luajit_timestamp
 LUAJIT_URL_HTTP = https://github.com/LuaJIT/LuaJIT/archive/v$(LUAJIT_VERSION).zip
 
+GETTEXT_VERSION = 0.21
+GETTEXT_DIR = $(ANDR_ROOT)/deps/gettext
+GETTEXT_LIB = $(GETTEXT_DIR)/out-static/libgettext.a
+GETTEXT_TIMESTAMP = $(GETTEXT_DIR)/timestamp
+GETTEXT_TIMESTAMP_INT = $(ANDR_ROOT)/deps/gettext_timestamp
+GETTEXT_URL = https://ftp.gnu.org/pub/gnu/gettext/gettext-$(GETTEXT_VERSION).tar.gz
 ######################################################################################
 
 ANDROID_NDK = $(shell grep '^ndk\.dir' local.properties | sed 's/^.*=[[:space:]]*//')
@@ -541,6 +547,55 @@ $(LUAJIT_LIB) : $(LUAJIT_TIMESTAMP)
 
 clean_luajit :
 	$(RM) -r ${LUAJIT_DIR}
+
+gettext_download :
+	@if [ ! -d ${GETTEXT_DIR} ] ; then									\
+		echo "gettext sources missing, downloading...";					\
+		mkdir -p ${ANDR_ROOT}/deps;										\
+		cd ${ANDR_ROOT}/deps ;											\
+		wget ${GETTEXT_URL} || exit 1;									\
+		tar zxf gettext-${GETTEXT_VERSION}.tar.gz || exit 1;			\
+		$(RM) -r gettext-${GETTEXT_VERSION}.tar.gz || exit 1;			\
+		mv gettext-${GETTEXT_VERSION} gettext || exit 1;				\
+	fi
+
+gettext : $(GETTEXT_LIB)
+
+$(GETTEXT_LIB): $(GETTEXT_TIMESTAMP)
+	@REFRESH=0;															\
+	if [ ! -e ${GETTEXT_TIMESTAMP_INT} ] ; then							\
+		REFRESH=1;														\
+	fi;																	\
+	if [ ${GETTEXT_TIMESTAMP} -nt ${GETTEXT_TIMESTAMP_INT} ] ; then		\
+		REFRESH=1;														\
+	fi;																	\
+	if [ $$REFRESH -ne 0 ] ; then										\
+	echo "changed timestamp for gettext detected building...";			\
+	cd ${GETTEXT_DIR}/gettext-runtime;									\
+	export TOOLCHAIN=${GETTEXT_DIR}/TOOLCHAIN;							\
+	${ANDROID_NDK}/build/tools/make_standalone_toolchain.py				\
+		--arch ${TARGET_ARCH}											\
+		--api ${API}													\
+		--stl=${APP_STL_LIB}											\
+		--install-dir=$${TOOLCHAIN};									\
+	export PATH="$${TOOLCHAIN}/bin:$${PATH}";							\
+	export TARGET_OS=OS_ANDROID_CROSSCOMPILE;							\
+	export CFLAGS="$${CFLAGS} ${TARGET_CFLAGS_ADDON}";					\
+	export CPPFLAGS="$${CPPFLAGS} ${TARGET_CXXFLAGS_ADDON} -fPIC";		\
+	CC=${CROSS_CC} ./configure --host=${TARGET_TOOLCHAIN}				\
+		--enable-static --disable-shared || exit 1;						\
+	CC=${CROSS_CC} ANDROID_DEV=$${TOOLCHAIN}							\
+	$(MAKE) -s || exit 1;												\
+	$(MAKE) DESTDIR=${GETTEXT_DIR}/build -s install|| exit 1;			\
+	touch ${GETTEXT_TIMESTAMP};											\
+	touch ${GETTEXT_TIMESTAMP_INT};										\
+	$(RM) -r $${TOOLCHAIN};												\
+	else																\
+		echo "nothing to be done for gettext";							\
+	fi
+
+clean_getttext :
+	$(RM) -r ${GETTEXT_DIR}
 
 deps : $(FREETYPE_LIB) $(CURL_LIB) $(LEVELDB_LIB)		\
 	$(LUAJIT_LIB) $(OPENAL_LIB) $(VORBIS_LIB) $(MBEDTLS_LIB) iconv_download
