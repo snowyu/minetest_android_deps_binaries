@@ -1,10 +1,11 @@
 #!/bin/bash -e
 ######
 # IMPORTANT: NDK r22 has broken zlib, use either r22b or r23*
-ndk=/the/path/to/android-ndk-r23-beta2
-irrlicht_ver=1.9.0mt1
+ndk=$HOME/android-sdk-linux/ndk/22.1.7171670
+PROXY="-x socks5h://localhost:1080"
+irrlicht_ver=1.9.0mt2
 png_ver=1.6.37
-jpeg_ver=2.0.6
+jpeg_ver=2.1.0
 ######
 
 mkdir -p deps

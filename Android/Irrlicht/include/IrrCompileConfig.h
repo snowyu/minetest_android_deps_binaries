@@ -6,8 +6,8 @@
 #define __IRR_COMPILE_CONFIG_H_INCLUDED__
 
 //! Identifies Irrlicht fork customized for the Minetest engine
-#define IRRLICHT_VERSION_MT_REVISION 1
-#define IRRLICHT_VERSION_MT "mt1"
+#define IRRLICHT_VERSION_MT_REVISION 2
+#define IRRLICHT_VERSION_MT "mt2"
 
 //! Irrlicht SDK Version
 #define IRRLICHT_VERSION_MAJOR 1
@@ -116,8 +116,6 @@
 #define _IRR_COMPILE_WITH_SDL_DEVICE_
 #define NO_IRR_COMPILE_WITH_X11_DEVICE_
 #define _IRR_LINUX_PLATFORM_	// emscripten basically working like a unix
-#define NO_IRR_COMPILE_WITH_SOFTWARE_
-#define NO_IRR_COMPILE_WITH_BURNINGSVIDEO_
 #endif // __EMSCRIPTEN__
 
 #if defined(__ANDROID__)
@@ -184,7 +182,7 @@ _IRR_COMPILE_WITH_DX9_DEV_PACK_. So you simply need to add something like this
 to the compiler settings: -DIRR_COMPILE_WITH_DX9_DEV_PACK
 and this to the linker settings: -ld3dx9
 */
-#if defined(_IRR_WINDOWS_API_) && (!defined(__GNUC__) || defined(IRR_COMPILE_WITH_DX9_DEV_PACK))
+#if defined(_IRR_WINDOWS_API_) && defined(IRR_COMPILE_WITH_DX9_DEV_PACK)
 
 //! Define _IRR_COMPILE_WITH_DIRECTINPUT_JOYSTICK_ if you want to use DirectInput for joystick handling.
 /** This only applies to Windows devices, currently only supported under Win32 device.
@@ -265,7 +263,11 @@ Depending on platform you may have to enable _IRR_OGLES1_USE_KHRONOS_API_HEADERS
 //! Define _IRR_COMPILE_WITH_OGLES2_ to compile the Irrlicht engine with OpenGL ES 2.0.
 /** If you do not wish the engine to be compiled with OpenGL ES 2.0, comment this
 define out. */
+#if defined(_IRR_ANDROID_PLATFORM_) || defined(_IRR_IOS_PLATFORM_)
+#define _IRR_COMPILE_WITH_OGLES2_
+#else
 //#define _IRR_COMPILE_WITH_OGLES2_
+#endif
 #ifdef NO_IRR_COMPILE_WITH_OGLES2_
 #undef _IRR_COMPILE_WITH_OGLES2_
 #endif
@@ -299,14 +301,14 @@ define out. */
 //! Define _IRR_COMPILE_WITH_SOFTWARE_ to compile the Irrlicht engine with software driver
 /** If you do not need the software driver, or want to use Burning's Video instead,
 comment this define out */
-#define _IRR_COMPILE_WITH_SOFTWARE_
+//#define _IRR_COMPILE_WITH_SOFTWARE_
 #ifdef NO_IRR_COMPILE_WITH_SOFTWARE_
 #undef _IRR_COMPILE_WITH_SOFTWARE_
 #endif
 
 //! Define _IRR_COMPILE_WITH_BURNINGSVIDEO_ to compile the Irrlicht engine with Burning's video driver
 /** If you do not need this software driver, you can comment this define out. */
-#define _IRR_COMPILE_WITH_BURNINGSVIDEO_
+//#define _IRR_COMPILE_WITH_BURNINGSVIDEO_
 #ifdef NO_IRR_COMPILE_WITH_BURNINGSVIDEO_
 #undef _IRR_COMPILE_WITH_BURNINGSVIDEO_
 #endif
