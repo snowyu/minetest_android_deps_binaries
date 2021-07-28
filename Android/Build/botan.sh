@@ -41,9 +41,12 @@ mkdir -p deps/botan/$abi
 # pushd deps/botan/$abi
 # CFLAGS="-fPIC" ../botan-runtime/configure --host=${CC%-*} --enable-static --disable-shared || exit 1
 pushd deps/botan
-CFLAGS="-fPIC" ./configure.py --enable-static-library --disable-shared-library --os=android --cc=clang --cpu=${cpu} --cc-bin=$CXX --ar-command=${gentriple}-ar
-# fix the https://github.com/randombit/botan/issues/2540
-sed -i 's/#define BOTAN_TARGET_OS_HAS_GETAUXVAL//' build/build.h
+params=""
+if [ "$apilvl" -lt 18 ]; then
+  params="--without-os-feature=getauxval"
+fi
+CFLAGS="-fPIC" ./configure.py $params --enable-static-library --disable-shared-library --os=android --cc=clang --cpu=${cpu} --cc-bin=$CXX --ar-command=${gentriple}-ar
+
 make -j4
 
 if [ -d "$dest" ]; then
