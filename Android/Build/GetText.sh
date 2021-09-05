@@ -29,13 +29,18 @@ else
 	echo "Invalid ABI given"; exit 1
 fi
 
+TARGET_CFLAGS_ADDON="-Ofast -fvisibility=hidden -fexceptions -D__ANDROID_API__=${apilvl}"
+TARGET_CXXFLAGS_ADDON="${TARGET_CFLAGS_ADDON} -frtti"
+export CFLAGS="${CFLAGS} ${TARGET_CFLAGS_ADDON}"
+export CPPFLAGS="${CPPFLAGS} ${TARGET_CXXFLAGS_ADDON} -fPIC"
+
 dest=$PWD/../GetText
 mkdir -p $dest/clang/$abi
 mkdir -p $dest/include
 
 mkdir -p deps/gettext/$abi
 pushd deps/gettext/$abi
-CFLAGS="-fPIC" ../gettext-runtime/configure --host=${CC%-*} --enable-static --disable-shared || exit 1
+../gettext-runtime/configure --host=${CC%-*} --enable-static --disable-shared || exit 1
 make -j4
 
 if [ -d "$dest" ]; then
