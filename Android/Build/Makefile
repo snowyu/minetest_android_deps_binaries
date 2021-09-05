@@ -2,29 +2,29 @@
 # toolchain config for ARMv7 (Clang)
 ######################################################################################
 
-API = 16
-TARGET_HOST = arm-linux
-TARGET_ABI = armeabi-v7a
-TARGET_ARCH = arm
-TARGET_TOOLCHAIN = arm-linux-androideabi
-TARGET_CFLAGS_ADDON = -mthumb -Ofast -fdata-sections -ffunction-sections -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
-TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
-CROSS_PREFIX = arm-linux-androideabi
-HOST_CC = "gcc -m32" # required for LuaJIT
+#API = 16
+#TARGET_HOST = arm-linux
+#TARGET_ABI = armeabi-v7a
+#TARGET_ARCH = arm
+#TARGET_TOOLCHAIN = arm-linux-androideabi
+#TARGET_CFLAGS_ADDON = -mthumb -Ofast -fdata-sections -ffunction-sections -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
+#TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
+#CROSS_PREFIX = arm-linux-androideabi
+#HOST_CC = "gcc -m32" # required for LuaJIT
 
 ######################################################################################
 # toolchain config for ARM64 (Clang)
 ######################################################################################
 
-# API = 21
-# TARGET_HOST = arm-linux
-# TARGET_ABI = arm64-v8a
-# TARGET_ARCH = arm64
-# TARGET_TOOLCHAIN = aarch64-linux-android
-# TARGET_CFLAGS_ADDON = -Ofast -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
-# TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
-# CROSS_PREFIX = aarch64-linux-android
-# HOST_CC = "gcc -m64" # required for LuaJIT
+API = 21
+TARGET_HOST = arm-linux
+TARGET_ABI = arm64-v8a
+TARGET_ARCH = arm64
+TARGET_TOOLCHAIN = aarch64-linux-android
+TARGET_CFLAGS_ADDON = -Ofast -fvisibility=hidden -fexceptions -D__ANDROID_API__=$(API)
+TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON) -frtti
+CROSS_PREFIX = aarch64-linux-android
+HOST_CC = "gcc -m64" # required for LuaJIT
 
 ######################################################################################
 # toolchain config for x86 (clang)
@@ -548,19 +548,24 @@ $(LUAJIT_LIB) : $(LUAJIT_TIMESTAMP)
 clean_luajit :
 	$(RM) -r ${LUAJIT_DIR}
 
+$(GETTEXT_TIMESTAMP) : gettext_download
+	@LAST_MODIF=$$(find ${GETTEXT_DIR} -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" ");\
+	if [ $$(basename $$LAST_MODIF) != "timestamp" ] ; then				\
+		touch ${GETTEXT_TIMESTAMP};										\
+	fi
+
 gettext_download :
 	@if [ ! -d ${GETTEXT_DIR} ] ; then									\
 		echo "gettext sources missing, downloading...";					\
 		mkdir -p ${ANDR_ROOT}/deps;										\
 		cd ${ANDR_ROOT}/deps ;											\
 		wget ${GETTEXT_URL} || exit 1;									\
-		tar zxf gettext-${GETTEXT_VERSION}.tar.gz || exit 1;			\
-		$(RM) -r gettext-${GETTEXT_VERSION}.tar.gz || exit 1;			\
+		tar zxf gettext-${GETTEXT_VERSION}.tar.gz || exit 1;					\
+		$(RM) -r gettext-${GETTEXT_VERSION}.tar.gz || exit 1;					\
 		mv gettext-${GETTEXT_VERSION} gettext || exit 1;				\
 	fi
 
 gettext : $(GETTEXT_LIB)
-
 $(GETTEXT_LIB): $(GETTEXT_TIMESTAMP)
 	@REFRESH=0;															\
 	if [ ! -e ${GETTEXT_TIMESTAMP_INT} ] ; then							\
@@ -586,7 +591,7 @@ $(GETTEXT_LIB): $(GETTEXT_TIMESTAMP)
 		--enable-static --disable-shared || exit 1;						\
 	CC=${CROSS_CC} ANDROID_DEV=$${TOOLCHAIN}							\
 	$(MAKE) -s || exit 1;												\
-	$(MAKE) DESTDIR=${GETTEXT_DIR}/build -s install|| exit 1;			\
+	$(MAKE) DESTDIR=${GETTEXT_DIR}/build -s install|| exit 1;					\
 	touch ${GETTEXT_TIMESTAMP};											\
 	touch ${GETTEXT_TIMESTAMP_INT};										\
 	$(RM) -r $${TOOLCHAIN};												\
@@ -597,7 +602,7 @@ $(GETTEXT_LIB): $(GETTEXT_TIMESTAMP)
 clean_getttext :
 	$(RM) -r ${GETTEXT_DIR}
 
-deps : $(FREETYPE_LIB) $(CURL_LIB) $(LEVELDB_LIB)		\
+deps : $(FREETYPE_LIB) $(CURL_LIB) $(LEVELDB_LIB) $(GETTEXT_LIB)		\
 	$(LUAJIT_LIB) $(OPENAL_LIB) $(VORBIS_LIB) $(MBEDTLS_LIB) iconv_download
 
 clean_all :

@@ -18,7 +18,7 @@
 #define _LIBINTL_H 1
 
 #include <locale.h>
-#if (defined __APPLE__ && defined __MACH__) && 0
+#if (defined __APPLE__ && defined __MACH__) && 1
 # include <xlocale.h>
 #endif
 
@@ -489,7 +489,7 @@ extern void freelocale (locale_t);
 extern char *setlocale (int, const char *);
 #endif
 
-#if 0
+#if 1
 
 #undef newlocale
 #define newlocale libintl_newlocale
