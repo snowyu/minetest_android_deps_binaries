@@ -3,9 +3,9 @@
 # IMPORTANT: NDK r22 has broken zlib, use either r22b or r23*
 ndk=$HOME/android-sdk-linux/ndk/22.1.7171670
 PROXY="-x socks5h://localhost:1080"
-irrlicht_ver=1.9.0mt2
+irrlicht_ver=1.9.0mt3
 png_ver=1.6.37
-jpeg_ver=2.1.0
+jpeg_ver=2.1.1
 ######
 
 mkdir -p deps
@@ -14,6 +14,9 @@ mkdir -p deps
 	| tar -xz -C deps; mv deps/libpng-${png_ver} deps/libpng; }
 [ -d deps/libjpeg ] || { curl -L "https://download.sourceforge.net/libjpeg-turbo/libjpeg-turbo-${jpeg_ver}.tar.gz" \
 	| tar -xz -C deps; mv deps/libjpeg-turbo-${jpeg_ver} deps/libjpeg; }
+
+git -C deps/irrlicht fetch
+git -C deps/irrlicht checkout $irrlicht_ver
 
 toolchain=$(echo "$ndk"/toolchains/llvm/prebuilt/*)
 [ -d "$toolchain" ] || { echo "NDK path wrong"; exit 1; }
